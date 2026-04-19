@@ -17,6 +17,9 @@
 ## Phase 2 — Backfill & Deployment (IN PROGRESS)
 
 - [x] backfill.py — historical data load for events table (FIRMS/EONET/GDACS/USGS, --source, --days CLI)
+- [x] archive.py — archive old Supabase data to local SQLite (events >30 days, AQI >7 days)
+- [x] pipeline.py cleanup — auto-delete stale rows after every run (FIRMS/GDACS >60d, EONET/USGS >365d, AQI >7d)
+- [x] setup_task_scheduler.ps1 — Windows Task Scheduler for automatic archival on logon
 - [ ] Render cron job — deploy pipeline.py on 30-minute schedule
 - [ ] Environment variables configured on Render dashboard
 - [ ] Add unique constraint for aqi_readings on Supabase

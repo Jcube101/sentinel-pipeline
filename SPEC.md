@@ -27,13 +27,14 @@ backfill.py (one-time)         Render Cron (every 30 min)
   ├── gdacs.fetch()                     ├── fetchers/eonet.py    → events table
   └── usgs.fetch()                      ├── fetchers/gdacs.py    → events table
          │                              ├── fetchers/usgs.py     → events table
-         │                              └── fetchers/openaq.py  → aqi_readings table
+         │                              ├── fetchers/openaq.py  → aqi_readings table
+         │                              └── _cleanup()           → delete stale rows
          └──────────────────────────────────────┐
                                                 ▼
                                          Supabase (Postgres)
-                                                │
-                                                ▼
-                                         Frontend (MapLibre GL + Recharts)
+                                           │           │
+                                           ▼           ▼
+                                    Frontend    archive.py → sentinel_archive.db
 ```
 
 ---
@@ -160,6 +161,16 @@ occurrence). This is required because Postgres raises an error if the same
 `pipeline.py` and `backfill.py` upsert in batches of 500 rows to stay within
 Supabase's request payload limits. Batching is handled by `_chunks()`.
 
+### Cleanup
+
+`_cleanup()` runs at the end of every `pipeline.run()`:
+- FIRMS / GDACS events: deleted after 60 days
+- EONET / USGS events: deleted after 365 days (low volume)
+- AQI readings: deleted after 7 days
+
+Each delete is wrapped in its own `try/except` — a failure in one does not
+affect the others or the pipeline exit code.
+
 ### Error Isolation
 
 - Each fetcher is wrapped in `try/except` inside `pipeline.py`
@@ -220,6 +231,24 @@ last 10 days, `VIIRS_NOAA20_SP` for older data. SP has a ~2-month processing
 lag — chunks in that window return 0 rows (expected).
 
 **USGS chunking:** 90-day windows to avoid the 20,000-result API cap.
+
+---
+
+## Archive
+
+`archive.py` copies old Supabase data to a local SQLite database
+(`sentinel_archive.db`) before cleanup removes it from Supabase.
+
+- Events older than 30 days
+- AQI readings older than 7 days
+- SQLite schema mirrors Supabase exactly (TEXT for timestamptz, REAL for numeric,
+  TEXT for jsonb with JSON serialization)
+- Uses `INSERT OR REPLACE` — safe to run multiple times
+- Paginates Supabase reads in 1000-row batches
+- Never deletes from Supabase
+
+**Windows automation:** `setup_task_scheduler.ps1` registers a Task Scheduler
+task that runs `archive.py` on every logon using `Register-ScheduledTask`.
 
 ---
 

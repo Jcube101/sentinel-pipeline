@@ -118,6 +118,37 @@ PYTHONPATH=. python backfill.py --source usgs --days 365
 
 Sources: `all`, `firms`, `eonet`, `gdacs`, `usgs`
 
+### 6. Archive old data to local SQLite
+
+```bash
+PYTHONPATH=. python archive.py
+```
+
+Archives events older than 30 days and AQI readings older than 7 days to `sentinel_archive.db`. Safe to run multiple times (uses `INSERT OR REPLACE`). Does not delete from Supabase.
+
+### 7. Set up automatic archival (Windows)
+
+Run once as Administrator:
+```powershell
+.\setup_task_scheduler.ps1
+```
+
+Creates a Windows Task Scheduler task ("Sentinel Archive") that runs `archive.py` on every logon.
+
+---
+
+## Data Retention
+
+`pipeline.py` runs `_cleanup()` at the end of every execution:
+
+| Data | Retention |
+|------|-----------|
+| FIRMS / GDACS events | 60 days |
+| EONET / USGS events | 365 days |
+| AQI readings | 7 days |
+
+Run `archive.py` before cleanup windows expire to preserve data locally.
+
 ---
 
 ## Environment Variables
@@ -140,6 +171,8 @@ sentinel-pipeline/
 ├── config.py              # env vars + India bounding box constants
 ├── pipeline.py            # main orchestrator — runs all fetchers, upserts to Supabase
 ├── backfill.py            # historical data loader (--source, --days CLI args)
+├── archive.py             # archive old Supabase data to local SQLite
+├── setup_task_scheduler.ps1  # Windows Task Scheduler setup for archive.py
 ├── requirements.txt
 ├── render.yaml            # Render cron job config
 ├── .env.example
@@ -164,7 +197,9 @@ sentinel-pipeline/
 1. **Fetch** — each fetcher calls its API, parses the response, and returns a `List[dict]` matching the Supabase schema exactly
 2. **Transform** — severity levels, categories, and deterministic IDs are computed during fetch
 3. **Upsert** — `pipeline.py` collects all events and bulk-upserts to Supabase in batches of 500, using the deterministic `id` field as the conflict key so re-runs never create duplicates
-4. **Schedule** — Render runs `pipeline.py` every 30 minutes via cron
+4. **Cleanup** — `pipeline.py` deletes stale rows from Supabase at the end of every run (FIRMS/GDACS >60 days, EONET/USGS >365 days, AQI >7 days)
+5. **Archive** — `archive.py` copies old data to local SQLite before it ages out of Supabase
+6. **Schedule** — Render runs `pipeline.py` every 30 minutes via cron
 
 ---
 
