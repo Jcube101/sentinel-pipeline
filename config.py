@@ -3,8 +3,8 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-SUPABASE_URL = os.getenv("SUPABASE_URL")
-SUPABASE_SERVICE_KEY = os.getenv("SUPABASE_SERVICE_KEY")
+SUPABASE_URL = os.getenv("SUPABASE_URL", "").strip().rstrip("/")
+SUPABASE_SERVICE_KEY = os.getenv("SUPABASE_SERVICE_KEY", "").strip()
 FIRMS_MAP_KEY = os.getenv("FIRMS_MAP_KEY")
 OPENAQ_API_KEY = os.getenv("OPENAQ_API_KEY")
 
