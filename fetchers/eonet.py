@@ -9,10 +9,9 @@ from config import INDIA_BBOX
 logger = logging.getLogger(__name__)
 
 ENDPOINT = "https://eonet.gsfc.nasa.gov/api/v3/events"
-PARAMS = {
+_BASE_PARAMS = {
     "status": "all",
     "category": "wildfires,severeStorms",
-    "days": 30,
     "bbox": "68.7,8.4,97.4,37.1",
 }
 
@@ -74,11 +73,16 @@ def _severity(geometries: list) -> tuple[str, float | None, str | None]:
     return "medium", None, None
 
 
-def fetch() -> list[dict]:
-    logger.info("EONET: fetching events from %s", ENDPOINT)
+def fetch(start_date: str | None = None, end_date: str | None = None) -> list[dict]:
+    if start_date and end_date:
+        params = {**_BASE_PARAMS, "start": start_date, "end": end_date}
+        logger.info("EONET: fetching events %s to %s", start_date, end_date)
+    else:
+        params = {**_BASE_PARAMS, "days": 30}
+        logger.info("EONET: fetching events (last 30 days)")
 
     try:
-        resp = requests.get(ENDPOINT, params=PARAMS, timeout=30)
+        resp = requests.get(ENDPOINT, params=params, timeout=30)
         resp.raise_for_status()
         data = resp.json()
     except requests.RequestException as exc:

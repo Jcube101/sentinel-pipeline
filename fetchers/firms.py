@@ -1,5 +1,4 @@
 import csv
-import hashlib
 import io
 import logging
 from datetime import datetime, timezone
@@ -13,6 +12,11 @@ logger = logging.getLogger(__name__)
 ENDPOINT = (
     "https://firms.modaps.eosdis.nasa.gov/api/area/csv"
     "/{key}/VIIRS_NOAA20_NRT/{bbox}/1"
+)
+# Backfill endpoint: supports day_range up to 10 and an explicit start date
+ENDPOINT_DATE = (
+    "https://firms.modaps.eosdis.nasa.gov/api/area/csv"
+    "/{key}/VIIRS_NOAA20_NRT/{bbox}/{day_range}/{date}"
 )
 
 
@@ -33,10 +37,8 @@ def _parse_datetime(acq_date: str, acq_time: str) -> str:
     return dt.replace(tzinfo=timezone.utc).isoformat()
 
 
-def fetch() -> list[dict]:
-    url = ENDPOINT.format(key=FIRMS_MAP_KEY, bbox=INDIA_BBOX_FIRMS)
-    logger.info("FIRMS: fetching from %s", url)
-
+def _fetch_url(url: str) -> list[dict]:
+    """Fetch and parse one FIRMS CSV URL into event dicts."""
     try:
         resp = requests.get(url, timeout=30)
         resp.raise_for_status()
@@ -93,8 +95,62 @@ def fetch() -> list[dict]:
         except Exception as exc:
             logger.warning("FIRMS: skipping row due to error — %s | row=%s", exc, row)
 
+    return events
+
+
+def fetch(start_date: str | None = None, end_date: str | None = None) -> list[dict]:
+    """Fetch fire hotspot events.
+
+    With no arguments fetches the last 1 day (pipeline mode).
+    With start_date/end_date, backfill.py drives chunked calls directly
+    via fetch_range() — this signature accepts them for interface consistency
+    but ignores them in favour of the default 1-day window.
+    """
+    url = ENDPOINT.format(key=FIRMS_MAP_KEY, bbox=INDIA_BBOX_FIRMS)
+    logger.info("FIRMS: fetching from %s", url)
+
+    events = _fetch_url(url)
     logger.info("FIRMS: fetched %d fire hotspot events", len(events))
     return events
+
+
+def fetch_range(start_date: datetime, end_date: datetime, chunk_days: int = 10) -> list[dict]:
+    """Fetch FIRMS data over a date range in chunk_days-sized windows."""
+    from datetime import timedelta
+    import time as _time
+
+    total_days = (end_date - start_date).days
+    num_chunks = max(1, (total_days + chunk_days - 1) // chunk_days)
+    all_events: list[dict] = []
+
+    chunk_start = start_date
+    chunk_num = 0
+    while chunk_start < end_date:
+        chunk_num += 1
+        chunk_end = min(chunk_start + timedelta(days=chunk_days), end_date)
+        actual_days = (chunk_end - chunk_start).days or 1
+        date_str = chunk_start.strftime("%Y-%m-%d")
+
+        logger.info(
+            "FIRMS: fetching chunk %d/%d (%s, %d days)",
+            chunk_num, num_chunks, date_str, actual_days,
+        )
+        url = ENDPOINT_DATE.format(
+            key=FIRMS_MAP_KEY,
+            bbox=INDIA_BBOX_FIRMS,
+            day_range=actual_days,
+            date=date_str,
+        )
+        chunk_events = _fetch_url(url)
+        logger.info("FIRMS: chunk %d returned %d events", chunk_num, len(chunk_events))
+        all_events.extend(chunk_events)
+
+        chunk_start = chunk_end
+        if chunk_start < end_date:
+            _time.sleep(1)
+
+    logger.info("FIRMS: fetch_range total %d events", len(all_events))
+    return all_events
 
 
 if __name__ == "__main__":

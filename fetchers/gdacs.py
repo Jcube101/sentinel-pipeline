@@ -26,10 +26,10 @@ SEVERITY_MAP = {
 }
 
 
-def _build_params() -> dict:
+def _build_params(start_date: str | None = None, end_date: str | None = None) -> dict:
     today = datetime.utcnow()
-    from_date = (today - timedelta(days=90)).strftime("%Y-%m-%d")
-    to_date = today.strftime("%Y-%m-%d")
+    from_date = start_date or (today - timedelta(days=90)).strftime("%Y-%m-%d")
+    to_date = end_date or today.strftime("%Y-%m-%d")
     return {
         "eventtypes": "EQ,TC,FL,WF,DR",
         "fromDate": from_date,
@@ -65,8 +65,8 @@ def _is_closed(props: dict) -> bool:
         return False
 
 
-def fetch() -> list[dict]:
-    params = _build_params()
+def fetch(start_date: str | None = None, end_date: str | None = None) -> list[dict]:
+    params = _build_params(start_date, end_date)
     logger.info(
         "GDACS: fetching events from=%s to=%s", params["fromDate"], params["toDate"]
     )

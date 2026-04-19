@@ -11,7 +11,7 @@ ENDPOINT = "https://earthquake.usgs.gov/fdsnws/event/1/query"
 _7_DAYS_MS = 7 * 24 * 60 * 60 * 1000
 
 
-def _build_params() -> dict:
+def _build_params(start_date: str | None = None, end_date: str | None = None) -> dict:
     now = datetime.now(tz=timezone.utc)
     return {
         "format": "geojson",
@@ -22,8 +22,8 @@ def _build_params() -> dict:
         "minmagnitude": 4.0,
         "orderby": "time",
         "limit": 500,
-        "starttime": (now - timedelta(days=90)).strftime("%Y-%m-%d"),
-        "endtime": now.strftime("%Y-%m-%d"),
+        "starttime": start_date or (now - timedelta(days=90)).strftime("%Y-%m-%d"),
+        "endtime": end_date or now.strftime("%Y-%m-%d"),
     }
 
 
@@ -51,8 +51,8 @@ def _is_closed(props: dict) -> bool:
     return (now_ms - time_ms) > _7_DAYS_MS
 
 
-def fetch() -> list[dict]:
-    params = _build_params()
+def fetch(start_date: str | None = None, end_date: str | None = None) -> list[dict]:
+    params = _build_params(start_date, end_date)
     logger.info(
         "USGS: fetching earthquakes starttime=%s endtime=%s minmag=4.0",
         params["starttime"], params["endtime"],
