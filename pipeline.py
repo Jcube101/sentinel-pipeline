@@ -24,6 +24,13 @@ def _chunks(lst: list, size: int):
         yield lst[i : i + size]
 
 
+def _dedup(rows: list) -> list:
+    seen: dict = {}
+    for row in rows:
+        seen[row["id"]] = row
+    return list(seen.values())
+
+
 def _run_fetcher(name: str, module) -> tuple[list, bool]:
     """Call module.fetch(), return (results, success)."""
     try:
@@ -59,7 +66,7 @@ def run():
     any_failure = not all([firms_ok, eonet_ok, gdacs_ok, usgs_ok, openaq_ok])
 
     # --- Write events ---
-    all_events = firms_rows + eonet_rows + gdacs_rows + usgs_rows
+    all_events = _dedup(firms_rows + eonet_rows + gdacs_rows + usgs_rows)
     try:
         events_upserted = _upsert(supabase, EVENTS_TABLE, all_events, "id")
         logger.info("events: upserted %d rows", events_upserted)

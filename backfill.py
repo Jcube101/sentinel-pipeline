@@ -37,9 +37,19 @@ def _chunks(lst: list, size: int):
         yield lst[i : i + size]
 
 
+def _dedup(rows: list) -> list:
+    """Deduplicate by id, keeping last occurrence. Guards against duplicate
+    IDs within a single payload, which Postgres rejects on ON CONFLICT upserts."""
+    seen: dict = {}
+    for row in rows:
+        seen[row["id"]] = row
+    return list(seen.values())
+
+
 def _upsert(supabase: Client, rows: list) -> int:
     if not rows:
         return 0
+    rows = _dedup(rows)
     upserted = 0
     for batch in _chunks(rows, BATCH_SIZE):
         supabase.table(EVENTS_TABLE).upsert(batch, on_conflict="id").execute()
