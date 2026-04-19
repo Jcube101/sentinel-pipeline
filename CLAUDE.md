@@ -61,9 +61,9 @@ PYTHONPATH=. python archive.py
 - Uses INSERT OR REPLACE — safe to run multiple times
 - Does NOT delete from Supabase (cleanup is handled by pipeline.py)
 
-To set up automatic daily archival on Windows logon (Mon–Fri), run once:
-```
-setup_task_scheduler.bat
+To set up automatic archival on Windows logon, run once (as Administrator):
+```powershell
+.\setup_task_scheduler.ps1
 ```
 This creates a Windows Task Scheduler task named "Sentinel Archive".
 
