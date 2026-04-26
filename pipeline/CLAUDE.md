@@ -1,10 +1,11 @@
 # Sentinel Pipeline
 
 Python data pipeline for the Sentinel natural disaster tracker.
-Fetches from 5 APIs and upserts to Supabase every 30 minutes via Render cron.
+Fetches from 5 APIs and upserts to Supabase daily via Render cron.
 
 ## Status
 All 5 fetchers complete and validated. pipeline.py and backfill.py working end-to-end.
+Render cron job deployed (daily 6:30am IST).
 - FIRMS → ~5,800 fire hotspot events (pipeline); ~97,245 events backfilled (30 days)
 - EONET → ~93 events (wildfires + severe storms)
 - GDACS → ~47 events (floods, cyclones, earthquakes)
@@ -13,7 +14,7 @@ All 5 fetchers complete and validated. pipeline.py and backfill.py working end-t
 
 ## How to Run
 
-Full pipeline:
+Full pipeline (from pipeline/ directory):
 ```bash
 PYTHONPATH=. python pipeline.py
 ```
@@ -38,7 +39,7 @@ due to the relative import of `config`.
 
 ## Backfill
 
-Run historical load:
+Run historical load (from pipeline/ directory):
 ```bash
 PYTHONPATH=. python backfill.py --source all --days 90
 PYTHONPATH=. python backfill.py --source firms --days 30
@@ -73,10 +74,6 @@ This creates a Windows Task Scheduler task named "Sentinel Archive".
 - FIRMS / GDACS events: keep 60 days
 - EONET / USGS events: keep 365 days
 - AQI readings: keep 7 days
-
-## Next Steps
-- Render deployment: cron job running pipeline.py every 30 minutes
-- Environment variables on Render dashboard
 
 ## Stack
 - Python 3.11

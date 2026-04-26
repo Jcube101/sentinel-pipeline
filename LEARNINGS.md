@@ -1,7 +1,8 @@
 # Learnings
 
-Real lessons from building the Sentinel pipeline. Recorded so the next
-project starts smarter.
+Real lessons from building Sentinel. Recorded so the next project starts smarter.
+
+These are primarily from building the data pipeline (`pipeline/`).
 
 ---
 
@@ -87,6 +88,7 @@ an `ImportError` because `from config import ...` is a relative import from
 the project root. Use module syntax with `PYTHONPATH` set instead:
 
 ```bash
+cd pipeline
 PYTHONPATH=. python -m fetchers.firms
 ```
 

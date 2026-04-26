@@ -7,10 +7,10 @@ Sentinel is a learning project and contributions are welcome.
 ## Local Setup
 
 ```bash
-git clone https://github.com/Jcube101/sentinel-pipeline.git
-cd sentinel-pipeline
+git clone https://github.com/Jcube101/sentinel.git
+cd sentinel/pipeline
 python -m venv venv
-source venv/bin/activate  # Windows: venv\Scripts\activate
+source venv/Scripts/activate  # Windows Git Bash
 pip install -r requirements.txt
 cp .env.example .env
 # fill in your API keys in .env
@@ -30,16 +30,16 @@ PYTHONPATH=. python -m fetchers.firms
 
 ## How to Add a New Fetcher
 
-Create `fetchers/your_source.py`. The interface contract is simple:
+Create `pipeline/fetchers/your_source.py`. The interface contract is simple:
 
 1. **Export `fetch() -> List[dict]`** — this is the only function `pipeline.py` calls
-2. **Return dicts matching the events table schema exactly** (see SPEC.md or CLAUDE.md for all fields)
+2. **Return dicts matching the events table schema exactly** (see SPEC.md or pipeline/CLAUDE.md for all fields)
 3. **Handle all exceptions internally** — catch errors per-row and per-request, log warnings, never raise to the caller
 4. **Use deterministic IDs** — build the `id` field from source data fields, never `uuid4()`
 5. **Never write to Supabase** — fetchers only fetch and transform; `pipeline.py` handles all writes
 6. **Log clearly** — use `logger.info` for counts, `logger.warning` for skipped rows, `logger.error` for failed requests
 
-Then in `pipeline.py`:
+Then in `pipeline/pipeline.py`:
 - Import your fetcher
 - Add a `_run_fetcher("YourSource", your_source)` call
 - Add the results to `all_events` (or handle a new table separately)
@@ -63,7 +63,7 @@ If your fetcher writes to a different table (like `openaq.py` writes to `aqi_rea
 
 1. Fork the repo and create a branch: `git checkout -b feat/your-feature`
 2. Make your changes
-3. Test by running `PYTHONPATH=. python pipeline.py` end-to-end
+3. Test by running `cd pipeline && PYTHONPATH=. python pipeline.py` end-to-end
 4. Open a PR with a clear description of what you changed and why
 
 ---

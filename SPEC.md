@@ -5,9 +5,9 @@
 ## Project Overview
 
 Sentinel is a real-time natural disaster tracker for India. The pipeline
-fetches data from five public APIs every 30 minutes, normalises it into a
-consistent schema, and upserts it into Supabase. A frontend map visualises
-active events.
+fetches data from five public APIs daily, normalises it into a consistent
+schema, and upserts it into Supabase. A Vite + React frontend visualises
+active events on a map.
 
 **Goals:**
 - Aggregate fire, flood, cyclone, earthquake, and air quality data for India
@@ -18,11 +18,28 @@ active events.
 
 ---
 
+## Repository Structure
+
+```
+sentinel/
+├── pipeline/              — Python data pipeline
+│   ├── fetchers/          — one module per data source
+│   ├── pipeline.py        — orchestrator (fetch → upsert → cleanup)
+│   ├── backfill.py        — historical data loader
+│   ├── archive.py         — Supabase → local SQLite archiver
+│   ├── config.py          — env vars + India bbox constants
+│   ├── requirements.txt
+│   └── render.yaml        — Render cron job config
+└── frontend/              — Vite + React + TypeScript (in progress)
+```
+
+---
+
 ## Architecture
 
 ```
-backfill.py (one-time)         Render Cron (every 30 min)
-  ├── firms.fetch_range()         └── pipeline.py
+backfill.py (one-time)         Render Cron (daily)
+  ├── firms.fetch_range()         └── pipeline/pipeline.py
   ├── eonet.fetch()                     ├── fetchers/firms.py    → events table
   ├── gdacs.fetch()                     ├── fetchers/eonet.py    → events table
   └── usgs.fetch()                      ├── fetchers/gdacs.py    → events table
@@ -188,17 +205,21 @@ affect the others or the pipeline exit code.
 
 ---
 
-## Frontend Spec (Phase 3)
+## Frontend Spec
 
-**Stack:** Next.js, MapLibre GL JS, Recharts
+**Stack:** Vite + React + TypeScript + MapLibre GL JS + Recharts
+
+**Design system:** Dark (#0a0a0f), amber accent (#f97316), Inter/DM Sans
 
 **Map:**
-- Base layer: MapLibre GL with a neutral dark tile style
-- Event markers: coloured by category (fire=orange, earthquake=red, flood=blue, cyclone=purple)
-- Marker size: scaled by severity
-- Click: opens event detail sidebar
+- Base layer: MapLibre GL with dark OpenFreeMap tiles
+- Initial view: lon 82.8, lat 22.5, zoom 4.2
+- Event markers: coloured by category (fire=#ef4444, flood=#3b82f6, cyclone=#8b5cf6, earthquake=#f59e0b)
+- Supercluster clustering for dense FIRMS hotspots
+- Click: opens event detail panel
 
-**Sidebar:**
+**Event detail panel:**
+- Bottom sheet on mobile, side panel on desktop
 - Event title, category badge, severity badge
 - Started/closed dates
 - Place name + coordinates
@@ -207,10 +228,10 @@ affect the others or the pipeline exit code.
 
 **Filters:**
 - Toggle by category
-- Toggle by severity
-- Toggle open/closed
+- Toggle by status (open/closed/all)
+- Days range selector (7/30/90)
 
-**AQI overlay:**
+**AQI overlay (V2):**
 - Station markers with colour-coded AQI value
 - Tooltip showing parameter breakdown
 
@@ -247,7 +268,7 @@ lag — chunks in that window return 0 rows (expected).
 - Paginates Supabase reads in 1000-row batches
 - Never deletes from Supabase
 
-**Windows automation:** `setup_task_scheduler.ps1` registers a Task Scheduler
+**Windows automation:** `pipeline/setup_task_scheduler.ps1` registers a Task Scheduler
 task that runs `archive.py` on every logon using `Register-ScheduledTask`.
 
 ---
@@ -267,12 +288,15 @@ task that runs `archive.py` on every logon using `Register-ScheduledTask`.
 
 **Platform:** Render
 
-**Service type:** Cron Job
+**Pipeline service:**
+- Type: Cron Job
+- Schedule: Daily (6:30am IST)
+- Command: `python pipeline/pipeline.py`
+- Build command: `pip install -r pipeline/requirements.txt`
 
-**Schedule:** `*/30 * * * *` (every 30 minutes)
-
-**Command:** `python pipeline.py`
-
-**Build command:** `pip install -r requirements.txt`
+**Frontend service (planned):**
+- Type: Static Site
+- Build command: `cd frontend && npm run build`
+- Publish directory: `frontend/dist`
 
 **Environment variables:** Set in Render dashboard, matching `.env` keys above
