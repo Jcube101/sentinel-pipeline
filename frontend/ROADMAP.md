@@ -11,11 +11,12 @@
 - [ ] Environment variables on Render
 
 ### Landing page (/)
-- [ ] Hero with live event counts from Supabase
-- [ ] "Open Live Map" CTA
-- [ ] Data sources attribution
-- [ ] Last updated timestamp
-- [ ] Footer with GitHub link
+- [x] Navbar with SENTINEL brand + "View Live Map" CTA
+- [x] Hero with live event counts from Supabase (4 stat cards via useNaturalEvents)
+- [x] "Open Live Map" CTA button linking to /dashboard
+- [x] "How It Works" section (3 cards)
+- [x] Data sources section (5 rows, external links)
+- [x] Footer with GitHub link + daily refresh note
 
 ### Dashboard (/dashboard)
 - [ ] MapLibre GL map centred on India
