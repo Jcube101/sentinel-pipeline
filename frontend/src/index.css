@@ -1,0 +1,31 @@
+@import 'maplibre-gl/dist/maplibre-gl.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg-primary: #0a0a0f;
+  --bg-secondary: #111118;
+  --bg-card: #16161f;
+  --border: #2a2a3a;
+  --text-primary: #f0f0f5;
+  --text-muted: #7070a0;
+  --accent: #f97316;
+  --accent-hover: #ea6a0a;
+  --fire: #ef4444;
+  --flood: #3b82f6;
+  --cyclone: #8b5cf6;
+  --earthquake: #f59e0b;
+}
+
+body {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: 'Inter', system-ui, sans-serif;
+  margin: 0;
+}
+
+* {
+  box-sizing: border-box;
+}
