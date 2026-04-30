@@ -50,7 +50,8 @@ export function useNaturalEvents(filters: EventFilters) {
       }
       return events
     },
-    staleTime: 1000 * 60 * 15,
+    staleTime: 0,
+    refetchOnWindowFocus: true,
     enabled: !!supabase,
   })
 }
