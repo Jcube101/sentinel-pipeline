@@ -17,7 +17,7 @@ export function useNaturalEvents(filters: EventFilters) {
         )
         .gte('started_at', since.toISOString())
         .order('started_at', { ascending: false })
-        .limit(5000)
+        .range(0, 4999)
 
       if (filters.categories.length > 0) {
         query = query.in('category', filters.categories)
