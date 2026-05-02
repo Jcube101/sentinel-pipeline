@@ -4,8 +4,9 @@
 Data pipeline fetching from 5 APIs into Supabase.
 See [pipeline/ROADMAP.md](pipeline/ROADMAP.md) for detail.
 
-## Phase 2 — Frontend V1 (IN PROGRESS 🔧)
+## Phase 2 — Frontend V1 (COMPLETE ✅)
 Standalone Vite + React dashboard on Render.
+Live at https://sentinel-frontend-8hem.onrender.com
 See [frontend/ROADMAP.md](frontend/ROADMAP.md) for detail.
 
 ## Phase 3 — Frontend V2 (PLANNED 📋)
@@ -28,3 +29,4 @@ Alerts, public API, expanded coverage.
 | Apr 2026 | Frontend scaffolded — Vite + React + TS + Tailwind + MapLibre + Supabase |
 | Apr 2026 | Landing page built — hero with live stats, data sources, navbar, footer |
 | May 2026 | Dashboard built — map, filters, clustering, event detail panel, stats bar |
+| May 2026 | Frontend deployed on Render — live at sentinel-frontend-8hem.onrender.com |

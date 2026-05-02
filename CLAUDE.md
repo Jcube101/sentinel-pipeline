@@ -2,7 +2,7 @@
 
 ## Structure
 - pipeline/ — Python pipeline, runs on Render cron job
-- frontend/ — Vite + React frontend, Render static site
+- frontend/ — Vite + React frontend, Render static site (live at sentinel-frontend-8hem.onrender.com)
 
 ## Rules
 - Never mix pipeline and frontend dependencies
