@@ -15,7 +15,7 @@ export default function Dashboard() {
   })
   const [selectedEvent, setSelectedEvent] = useState<NaturalEvent | null>(null)
 
-  const { data } = useNaturalEvents(filters)
+  const { data, isLoading } = useNaturalEvents(filters)
   const events = data ?? []
 
   return (
@@ -24,7 +24,7 @@ export default function Dashboard() {
       <div style={{ height: 56 }} />
       <FilterBar filters={filters} onChange={setFilters} totalCount={events.length} />
       <div className="flex-1 relative">
-        <SentinelMap events={events} selectedEvent={selectedEvent} onEventSelect={setSelectedEvent} />
+        <SentinelMap events={events} selectedEvent={selectedEvent} onEventSelect={setSelectedEvent} isLoading={isLoading} />
         <EventDetailPanel event={selectedEvent} onClose={() => setSelectedEvent(null)} />
       </div>
       <StatsBar events={events} />

@@ -133,3 +133,17 @@ This means deduplication must happen **before** sending rows to Supabase, not
 only on conflict with existing data. The fix is a `_dedup()` helper that keeps
 the last occurrence of any duplicate `id` within the batch. Apply it in both
 `pipeline.py` (on the combined events list) and inside `backfill.py`'s `_upsert()`.
+
+---
+
+## Supabase URL Env Vars Must Be Trimmed
+
+`VITE_SUPABASE_URL` set on Render had a trailing space, causing `%20` to
+appear in all API request URLs, resulting in `ERR_NAME_NOT_RESOLVED`.
+
+Fix: always trim Supabase URL and key values when setting them in any
+environment — Render, `.env`, or any other config. A space is invisible but
+breaks everything silently.
+
+Same issue occurred earlier in `pipeline/.env` (space in `SUPABASE_URL`
+caught during pipeline setup).

@@ -20,12 +20,19 @@ const DATA_SOURCES = [
 ]
 
 export default function Landing() {
-  const { data: events, isLoading } = useNaturalEvents({ categories: [], status: 'open', days: 30 })
+  const fire = useNaturalEvents({ categories: ['fire'], status: 'open', days: 30 })
+  const flood = useNaturalEvents({ categories: ['flood'], status: 'open', days: 30 })
+  const cyclone = useNaturalEvents({ categories: ['cyclone'], status: 'open', days: 30 })
+  const earthquake = useNaturalEvents({ categories: ['earthquake'], status: 'open', days: 30 })
 
-  function countCategory(cat: string) {
-    if (!events) return 0
-    return events.filter((e) => e.category === cat).length
+  const counts: Record<string, number> = {
+    fire: fire.data?.length ?? 0,
+    flood: flood.data?.length ?? 0,
+    cyclone: cyclone.data?.length ?? 0,
+    earthquake: earthquake.data?.length ?? 0,
   }
+
+  const isLoading = fire.isLoading || flood.isLoading || cyclone.isLoading || earthquake.isLoading
 
   return (
     <div style={{ backgroundColor: '#0a0a0f', color: '#f0f0f5' }} className="min-h-screen">
@@ -59,7 +66,7 @@ export default function Landing() {
                 <div className="h-8 w-12 mx-auto rounded animate-pulse" style={{ backgroundColor: '#2a2a3a' }} />
               ) : (
                 <p className="text-2xl font-bold" style={{ color: CATEGORY_COLORS[category] }}>
-                  {countCategory(category)}
+                  {counts[category]}
                 </p>
               )}
               <p className="text-xs mt-1" style={{ color: '#7070a0' }}>{label}</p>

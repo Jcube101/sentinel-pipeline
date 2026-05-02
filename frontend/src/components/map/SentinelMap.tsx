@@ -9,6 +9,7 @@ interface Props {
   events: NaturalEvent[]
   onEventSelect: (event: NaturalEvent | null) => void
   selectedEvent: NaturalEvent | null
+  isLoading?: boolean
 }
 
 interface ViewState {
@@ -18,7 +19,7 @@ interface ViewState {
   bounds: [number, number, number, number] | null
 }
 
-export default function SentinelMap({ events, onEventSelect, selectedEvent }: Props) {
+export default function SentinelMap({ events, onEventSelect, selectedEvent, isLoading }: Props) {
   const [viewState, setViewState] = useState<ViewState>({
     longitude: 82.8,
     latitude: 22.5,
@@ -68,18 +69,33 @@ export default function SentinelMap({ events, onEventSelect, selectedEvent }: Pr
   }, [])
 
   return (
-    <Map
-      longitude={viewState.longitude}
-      latitude={viewState.latitude}
-      zoom={viewState.zoom}
-      onMove={handleMove}
-      onMoveEnd={handleMoveEnd}
-      onLoad={handleLoad}
-      mapStyle="https://tiles.openfreemap.org/styles/dark"
-      style={{ width: '100%', height: '100%' }}
-      minZoom={3}
-      maxZoom={14}
-    >
+    <>
+      {isLoading && (
+        <div style={{
+          position: 'absolute', inset: 0,
+          display: 'flex', alignItems: 'center',
+          justifyContent: 'center',
+          background: 'rgba(10,10,15,0.7)',
+          color: '#7070a0',
+          fontSize: '14px',
+          zIndex: 10,
+          pointerEvents: 'none',
+        }}>
+          Loading events...
+        </div>
+      )}
+      <Map
+        longitude={viewState.longitude}
+        latitude={viewState.latitude}
+        zoom={viewState.zoom}
+        onMove={handleMove}
+        onMoveEnd={handleMoveEnd}
+        onLoad={handleLoad}
+        mapStyle="https://tiles.openfreemap.org/styles/dark"
+        style={{ width: '100%', height: '100%' }}
+        minZoom={3}
+        maxZoom={14}
+      >
       <NavigationControl position="top-right" />
 
       {clusters.map((feat) => {
@@ -130,6 +146,7 @@ export default function SentinelMap({ events, onEventSelect, selectedEvent }: Pr
           </Marker>
         )
       })}
-    </Map>
+      </Map>
+    </>
   )
 }
